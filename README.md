@@ -1,15 +1,17 @@
 # Kepler/K2 Quality Control
 
-***Automated quality control of Kepler/K2 data products."""
+***Automated quality control of Kepler/K2 data products.***
 
-This tool allows the (Guest Observer Office of NASA's Kepler/K2 Missions)[https://keplerscience.arc.nasa.gov]
+This tool allows the [Guest Observer Office of NASA's Kepler/K2 Missions](https://keplerscience.arc.nasa.gov)
 to perform a quick sanity check of its public data sets.
 
 In particular, this tool verifies that Target Pixel Files
 are wel-formatted and contain sensible data.
-It does not replace the pipeline's suits of unit tests,
+It does not replace the pipeline's existing suite of unit tests,
 it merely provides an independent sanity check on the final data products
-that the pipeline creates, and is intended to be run prior to each data release.
+that the pipeline creates.
+It is intended to be run prior to each data release and catch obvious errors
+such as corrupt files or nonsensical data.
 
 
 ## Installation
