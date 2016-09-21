@@ -4,6 +4,7 @@ import glob
 import os
 from tqdm import tqdm
 import numpy as np
+import warnings
 
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -77,7 +78,11 @@ class TargetPixelFileValidator(object):
         K2 Campaigns 0-1-2 should be reprocessed by end 2016 to include the same.
         """
         THRUSTER_FIRING_FLAG = 1048576
-        if 'CAMPAIGN' in self.tpf[0].header and self.tpf[0].header['CAMPAIGN'] > 2:
+        # Campaigns 9a (91) and 9b (92) are "Type 1" Target Pixel Files
+        # that do not have thruster firing flags set.
+        CAMPAIGNS_WITHOUT_THRUSTER_FLAGS = [91, 92]
+        if ('CAMPAIGN' in self.tpf[0].header and
+                self.tpf[0].header['CAMPAIGN'] not in CAMPAIGNS_WITHOUT_THRUSTER_FLAGS):
             thruster_firings = ((self.tpf[1].data['QUALITY'] & THRUSTER_FIRING_FLAG) > 0).sum()
             campaign_length = self.tpf[1].header['TELAPSE']  # days
             # Expect at least one thruster firing per day
@@ -87,8 +92,15 @@ class TargetPixelFileValidator(object):
         """At least some cadences should have QUALITY FLAGS equal to 0 (i.e. perfect data)."""
         assert (self.tpf[1].data['QUALITY'] == 0).sum() > 0
 
-    def verify_wcs(self):
-        """Coarse test of the WCS solution."""
+    def verify_wcs_keywords(self):
+        """Are the WCS keywords valid?"""
+        try:
+            WCS(self.tpf[2].header)
+        except Exception:
+            assert False
+
+    def verify_wcs_coordinates(self):
+        """Is the WCS solution consistent with RA_OBJ and DEC_OBJ?"""
         w = WCS(self.tpf[2].header)
         # TODO: verify that the order of NAXIS1 vs NAXIS2 is correct, prob transposed
         ra, dec = w.all_pix2world([[self.tpf[2].header['NAXIS1']/2.,
@@ -96,6 +108,22 @@ class TargetPixelFileValidator(object):
                                   0)[0]
         assert np.abs(ra - self.tpf[0].header['RA_OBJ']) < 0.1  # degrees
         assert np.abs(dec - self.tpf[0].header['DEC_OBJ']) < 0.1  # degrees
+
+    def verify_positive_flux(self):
+        """Fails if bright stars show negative flux in >10% of cadences."""
+        try:
+            kepmag = float(self.tpf[0].header['KEPMAG'])
+        except TypeError:
+            return   # Ignore custom masks without target
+        if kepmag < 16:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                median_flux = np.nanmedian(self.tpf[1].data['FLUX'], axis=(1, 2))
+                mask_negative_flux = median_flux < 0
+            # What's the fraction of cadences where the flux is negative?
+            fraction_negative = mask_negative_flux.sum() / len(mask_negative_flux)
+            if fraction_negative > 0.1:
+                assert False
 
 
 class KeplerQualityPolice(object):
