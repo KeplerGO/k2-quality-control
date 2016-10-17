@@ -139,7 +139,8 @@ class KeplerQualityPolice(object):
             Path to a directory containing Target Pixel Files.
         """
         validator = TargetPixelFileValidator(self.logger)
-        for filename in tqdm(glob.glob(os.path.join(path, '*-targ.fits')), desc='Checking Target Pixel Files'):
+        filenames = glob.glob(os.path.join(path, '*-targ.fits')) + glob.glob(os.path.join(path, '*-targ.fits.gz'))
+        for filename in tqdm(filenames, desc='Checking Target Pixel Files'):
             validator.validate(filename)
         self.logger.print_summary()
 
