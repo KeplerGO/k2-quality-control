@@ -64,7 +64,9 @@ def get_quality_flags_summary(path):
                         'value': int(flag),
                         'count': flag_count})
     df = pd.DataFrame(summary)
-    df.total_cadence_count = len(f[1].data['QUALITY'])
+    df.first_cadence = f[1].data['CADENCENO'][0]
+    df.last_cadence = f[1].data['CADENCENO'][-1]
+    df.total_cadence_count = len(f[1].data['CADENCENO'])
     return df
 
 
@@ -73,9 +75,11 @@ def get_quality_flags_summary(path):
 def k2qc_flags_main(path):
     """Show a summary of the QUALITY flags."""
     df = get_quality_flags_summary(path)
+    print('First cadence: {}'.format(df.first_cadence))
+    print('Last cadence: {}'.format(df.last_cadence))
+    print('Total number of cadences: {}'.format(df.total_cadence_count))
     print(df.sort_values('value')
             .to_string(columns=['bit', 'value', 'flag', 'count'], index=False))
-    print('(Total number of cadences: {})'.format(df.total_cadence_count))
 
 
 if __name__ == '__main__':
