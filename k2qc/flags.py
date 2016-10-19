@@ -2,7 +2,7 @@ from astropy.io import fits
 import click
 import numpy as np
 import pandas as pd
-
+import matplotlib.pyplot as pl
 
 # The meaning of the various flags are described in the Kepler Archive Manual
 KEPLER_QUALITY_FLAGS = {
@@ -70,9 +70,35 @@ def get_quality_flags_summary(path):
     return df
 
 
+def plot_quality_flags(path, output_fn):
+    """Plots a graphical overview of quality flags vs cadence number."""
+    f = fits.open(path)
+    pl.figure(figsize=(16, 9))
+
+    cadenceno = f[1].data['CADENCENO']
+    labels = []
+    bits = range(len(KEPLER_QUALITY_FLAGS))
+    for bit in bits:
+        flag = int(2**bit)
+        if str(flag) not in KEPLER_QUALITY_FLAGS:
+            labels.append('')
+            continue
+        flag_mask = (f[1].data['QUALITY'] & int(flag)) > 0
+        pl.scatter(cadenceno[flag_mask], [bit]*flag_mask.sum(), marker='|')
+        labels.append(KEPLER_QUALITY_FLAGS[str(flag)])
+    pl.xlim([cadenceno[0], cadenceno[-1]])
+    pl.ylim([-1, len(KEPLER_QUALITY_FLAGS)+1])
+    pl.xlabel('Cadence')
+    pl.yticks(bits, labels)
+    pl.tight_layout()
+    pl.savefig(output_fn)
+    pl.close()
+
+
 @click.command()
 @click.argument('path', type=click.Path(exists=True))
-def k2qc_flags_main(path):
+@click.option('--plot', is_flag=True)
+def k2qc_flags_main(path, plot):
     """Show a summary of the QUALITY flags."""
     df = get_quality_flags_summary(path)
     print('First cadence: {}'.format(df.first_cadence))
@@ -80,6 +106,10 @@ def k2qc_flags_main(path):
     print('Total number of cadences: {}'.format(df.total_cadence_count))
     print(df.sort_values('value')
             .to_string(columns=['bit', 'value', 'flag', 'count'], index=False))
+    if plot:
+        output_fn = 'k2qc-flags.png'
+        print('Writing {}'.format(output_fn))
+        plot_quality_flags(path, output_fn)
 
 
 if __name__ == '__main__':
