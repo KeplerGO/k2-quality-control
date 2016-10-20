@@ -77,7 +77,7 @@ def plot_quality_flags(path, output_fn):
 
     cadenceno = f[1].data['CADENCENO']
     labels = []
-    bits = range(len(KEPLER_QUALITY_FLAGS))
+    bits = range(len(KEPLER_QUALITY_FLAGS)+1)
     for bit in bits:
         flag = int(2**bit)
         if str(flag) not in KEPLER_QUALITY_FLAGS:
@@ -86,7 +86,7 @@ def plot_quality_flags(path, output_fn):
         flag_mask = (f[1].data['QUALITY'] & int(flag)) > 0
         pl.scatter(cadenceno[flag_mask], [bit]*flag_mask.sum(), marker='|')
         labels.append(KEPLER_QUALITY_FLAGS[str(flag)])
-    pl.xlim([cadenceno[0], cadenceno[-1]])
+    pl.xlim([cadenceno[0] - 10, cadenceno[-1] + 10])
     pl.ylim([-1, len(KEPLER_QUALITY_FLAGS)+1])
     pl.xlabel('Cadence')
     pl.yticks(bits, labels)
