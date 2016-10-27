@@ -48,6 +48,30 @@ Options:
 
 ```
 
+The package also installs the following auxillary tools
+to help inspect the contents of target pixel files:
+
+```
+$ k2qc-flags --help
+Usage: k2qc-flags [OPTIONS] PATH
+
+  Show a summary of the QUALITY flags.
+
+Options:
+  --plot
+  --help  Show this message and exit.
+```
+
+```
+$ k2qc-flux --help
+Usage: k2qc-flux [OPTIONS] PATH
+
+  Plots the FLUX, FLUX_BKG, and RAW_CNTS time series given a Target Pixel
+  File.
+
+Options:
+  --help  Show this message and exit.
+```
 
 ## Authors
 
