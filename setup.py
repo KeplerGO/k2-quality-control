@@ -15,7 +15,8 @@ exec(open('k2qc/version.py').read())
 
 entry_points = {'console_scripts':
                 ['k2qc = k2qc:k2qc_main',
-                 'k2qc-flags = k2qc.flags:k2qc_flags_main']}
+                 'k2qc-flags = k2qc.flags:k2qc_flags_main',
+                 'k2qc-flux = k2qc.flux:k2qc_flux_main']}
 
 setup(name='k2qc',
       version=__version__,
