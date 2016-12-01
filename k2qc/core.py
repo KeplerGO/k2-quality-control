@@ -106,24 +106,29 @@ class TargetPixelFileValidator(object):
         ra, dec = w.all_pix2world([[self.tpf[2].header['NAXIS1']/2.,
                                     self.tpf[2].header['NAXIS2']/2.]],
                                   0)[0]
-        assert np.abs(ra - self.tpf[0].header['RA_OBJ']) < 0.1  # degrees
-        assert np.abs(dec - self.tpf[0].header['DEC_OBJ']) < 0.1  # degrees
+        assert np.abs(ra - self.tpf[0].header['RA_OBJ']) < (10/3600.)  # degrees
+        assert np.abs(dec - self.tpf[0].header['DEC_OBJ']) < (10/3600.)  # degrees
 
     def verify_positive_flux(self):
-        """Fails if bright stars show negative flux in >10% of cadences."""
+        """The observed flux (inc background) should never be negative."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # ignore NaN comparison warnings
+            flux_plus_bkg = self.tpf[1].data['FLUX'] + self.tpf[1].data['FLUX_BKG']
+            assert (flux_plus_bkg < 0).sum() == 0
+
+    def verify_cdpp(self):
+        """Are the CDPP estimates sensible?."""
+        CDPP_KEYWORDS = ['CDPP3_0', 'CDPP6_0', 'CDPP12_0']
+        for kw in CDPP_KEYWORDS:
+            assert kw in self.tpf[1].header
+            assert self.tpf[1].header[kw] > 0
         try:
-            kepmag = float(self.tpf[0].header['KEPMAG'])
+            if float(self.tpf[0].header['KEPMAG']) < 15:
+                for kw in CDPP_KEYWORDS:
+                    # Expect at least 1% photometry for bright stars
+                    assert self.tpf[1].header[kw] < 10000
         except TypeError:
             return   # Ignore custom masks without target
-        if kepmag < 16:
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                median_flux = np.nanmedian(self.tpf[1].data['FLUX'], axis=(1, 2))
-                mask_negative_flux = median_flux < 0
-            # What's the fraction of cadences where the flux is negative?
-            fraction_negative = mask_negative_flux.sum() / len(mask_negative_flux)
-            if fraction_negative > 0.1:
-                assert False
 
 
 class KeplerQualityPolice(object):
