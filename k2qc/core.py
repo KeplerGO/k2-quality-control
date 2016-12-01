@@ -2,6 +2,7 @@
 import click
 import glob
 import os
+import re
 from tqdm import tqdm
 import numpy as np
 import warnings
@@ -129,6 +130,12 @@ class TargetPixelFileValidator(object):
                     assert self.tpf[1].header[kw] < 10000
         except TypeError:
             return   # Ignore custom masks without target
+
+    def verify_campaign_number(self):
+        """Does campaign number in filename match the CAMPAIGN header keyword?"""
+        campaign_from_header = int(self.tpf[0].header['CAMPAIGN'])
+        campaign_from_filename = int(re.findall(r'\d+', self.tpf_filename)[1])
+        assert campaign_from_header == campaign_from_filename
 
 
 class KeplerQualityPolice(object):
