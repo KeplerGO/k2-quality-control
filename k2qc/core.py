@@ -107,8 +107,8 @@ class TargetPixelFileValidator(object):
         ra, dec = w.all_pix2world([[self.tpf[2].header['NAXIS1']/2.,
                                     self.tpf[2].header['NAXIS2']/2.]],
                                   0)[0]
-        assert np.abs(ra - self.tpf[0].header['RA_OBJ']) < (10/3600.)  # degrees
-        assert np.abs(dec - self.tpf[0].header['DEC_OBJ']) < (10/3600.)  # degrees
+        assert np.abs(ra - self.tpf[0].header['RA_OBJ']) < 0.1  # degrees
+        assert np.abs(dec - self.tpf[0].header['DEC_OBJ']) < 0.1  # degrees
 
     def verify_positive_flux(self):
         """The observed flux (inc background) should never be negative."""
@@ -120,21 +120,20 @@ class TargetPixelFileValidator(object):
     def verify_cdpp(self):
         """Are the CDPP estimates sensible?."""
         CDPP_KEYWORDS = ['CDPP3_0', 'CDPP6_0', 'CDPP12_0']
-        for kw in CDPP_KEYWORDS:
-            assert kw in self.tpf[1].header
-            assert self.tpf[1].header[kw] > 0
         try:
+            for kw in CDPP_KEYWORDS:
+                assert float(self.tpf[1].header[kw]) > 0
             if float(self.tpf[0].header['KEPMAG']) < 15:
                 for kw in CDPP_KEYWORDS:
                     # Expect at least 1% photometry for bright stars
-                    assert self.tpf[1].header[kw] < 10000
+                    assert float(self.tpf[1].header[kw]) < 10000
         except TypeError:
             return   # Ignore custom masks without target
 
     def verify_campaign_number(self):
         """Does campaign number in filename match the CAMPAIGN header keyword?"""
         campaign_from_header = int(self.tpf[0].header['CAMPAIGN'])
-        campaign_from_filename = int(re.findall(r'\d+', self.tpf_filename)[1])
+        campaign_from_filename = int(re.findall(r'\d+', self.tpf_filename)[-1])
         assert campaign_from_header == campaign_from_filename
 
 
