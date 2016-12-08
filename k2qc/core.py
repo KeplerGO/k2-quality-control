@@ -114,7 +114,8 @@ class TargetPixelFileValidator(object):
         """The observed flux (inc background) should never be negative."""
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # ignore NaN comparison warnings
-            flux_plus_bkg = self.tpf[1].data['FLUX'] + self.tpf[1].data['FLUX_BKG']
+            mask = self.tpf[1].data['QUALITY'] == 0
+            flux_plus_bkg = self.tpf[1].data['FLUX'][mask] + self.tpf[1].data['FLUX_BKG'][mask]
             assert (flux_plus_bkg < 0).sum() == 0
 
     def verify_cdpp(self):
