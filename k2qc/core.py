@@ -112,6 +112,10 @@ class TargetPixelFileValidator(object):
 
     def verify_positive_flux(self):
         """The observed flux (inc background) should never be negative."""
+        # Channel 43 (Mod.out 13.3) contains bad columns at col < 100 which
+        # will lead to aberrant fluxes; ignore this region
+        if self.tpf[0].header['CHANNEL'] == 43 and self.tpf[2].header['CRVAL1P'] < 100:
+            return
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # ignore NaN comparison warnings
             mask = self.tpf[1].data['QUALITY'] == 0
