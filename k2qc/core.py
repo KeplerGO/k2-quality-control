@@ -79,9 +79,9 @@ class TargetPixelFileValidator(object):
         K2 Campaigns 0-1-2 should be reprocessed by end 2016 to include the same.
         """
         THRUSTER_FIRING_FLAG = 1048576
-        # Campaigns 9a (91) and 9b (92) are "Type 1" Target Pixel Files
+        # Campaigns 9a (91), 9b (92), 10a (101) are "Type 1" Target Pixel Files
         # that do not have thruster firing flags set.
-        CAMPAIGNS_WITHOUT_THRUSTER_FLAGS = [91, 92]
+        CAMPAIGNS_WITHOUT_THRUSTER_FLAGS = [91, 92, 101]
         if ('CAMPAIGN' in self.tpf[0].header and
                 self.tpf[0].header['CAMPAIGN'] not in CAMPAIGNS_WITHOUT_THRUSTER_FLAGS):
             thruster_firings = ((self.tpf[1].data['QUALITY'] & THRUSTER_FIRING_FLAG) > 0).sum()
