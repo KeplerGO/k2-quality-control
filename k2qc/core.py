@@ -123,7 +123,10 @@ class TargetPixelFileValidator(object):
         CDPP_KEYWORDS = ['CDPP3_0', 'CDPP6_0', 'CDPP12_0']
         for kw in CDPP_KEYWORDS:
             assert kw in self.tpf[1].header
-            assert self.tpf[1].header[kw] > 0
+            try:
+                assert self.tpf[1].header[kw] > 0
+            except TypeError:
+                pass  # CDPP value undefined
         try:
             if float(self.tpf[0].header['KEPMAG']) < 15:
                 for kw in CDPP_KEYWORDS:
