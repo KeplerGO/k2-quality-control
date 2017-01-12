@@ -137,9 +137,10 @@ class TargetPixelFileValidator(object):
 
     def verify_campaign_number(self):
         """Does campaign number in filename match the CAMPAIGN header keyword?"""
-        campaign_from_header = int(self.tpf[0].header['CAMPAIGN'])
-        campaign_from_filename = int(re.findall(r'\d+', self.tpf_filename)[-1])
-        assert campaign_from_header == campaign_from_filename
+        if self.tpf[0].header['MISSION'] != 'Kepler':
+            campaign_from_header = int(self.tpf[0].header['CAMPAIGN'])
+            campaign_from_filename = int(re.findall(r'\d+', self.tpf_filename)[-1])
+            assert campaign_from_header == campaign_from_filename
 
 
 class KeplerQualityPolice(object):
