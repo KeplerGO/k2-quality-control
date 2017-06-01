@@ -48,6 +48,12 @@ Options:
 
 ```
 
+One can also redirect the standard output to a text file, e.g.:
+
+```
+$ k2qc /path/to/tpf-files > foo.txt
+```
+
 The package also installs the following auxillary tools
 to help inspect the contents of target pixel files:
 

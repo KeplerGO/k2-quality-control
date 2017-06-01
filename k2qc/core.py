@@ -23,8 +23,14 @@ class QualityIssueLogger(object):
         print(msg)
         self.issues.append(msg)
 
+    def record_issues(self):
+        with open('issues.txt', 'w+') as rec:
+            for issue in self.issues:
+                rec.write("{}\n".format(issue))
+
     def print_summary(self):
-        print('Found {} issues ({} files checked).'.format(len(self.issues), self.tpf_files_checked))
+        print('Found {} issues ({} files checked).'.format(len(self.issues),
+                                                           self.tpf_files_checked))
 
 
 class TargetPixelFileValidator(object):
@@ -71,7 +77,8 @@ class TargetPixelFileValidator(object):
     def verify_aperture_img_shape(self):
         """Flux data shape should match the aperture image shape.
         This is a regression test for KSOC-5085)."""
-        assert self.tpf[1].header['TDIM5'] == '({},{})'.format(self.tpf[2].header['NAXIS1'], self.tpf[2].header['NAXIS2'])
+        assert self.tpf[1].header['TDIM5'] == '({},{})'.format(self.tpf[2].header['NAXIS1'],
+                                                               self.tpf[2].header['NAXIS2'])
 
     def verify_thruster_flags(self):
         """K2 Campaigns 3 and later should contain sensible Thruster Firing Flags.
@@ -120,7 +127,12 @@ class TargetPixelFileValidator(object):
             warnings.simplefilter("ignore")  # ignore NaN comparison warnings
             mask = self.tpf[1].data['QUALITY'] == 0
             flux_plus_bkg = self.tpf[1].data['FLUX'][mask] + self.tpf[1].data['FLUX_BKG'][mask]
-            assert (flux_plus_bkg < 0).sum() == 0
+            if (flux_plus_bkg < 0).sum() > 0:
+                badpixels = np.argwhere(flux_plus_bkg < 0)
+                for pix in badpixels:
+                    print("Negative flux values found at frame {},"
+                          " pixel coordinates ({}, {})".format(pix[0], pix[1], pix[2]))
+                assert False
 
     def verify_cdpp(self):
         """Are the CDPP estimates sensible?."""
@@ -148,7 +160,7 @@ class KeplerQualityPolice(object):
     def __init__(self):
         self.logger = QualityIssueLogger()
 
-    def check_path(self, path):
+    def check_path(self, path, record_issues=True):
         """
         Parameters
         ----------
@@ -156,15 +168,15 @@ class KeplerQualityPolice(object):
             Path to a directory containing Target Pixel Files.
         """
         validator = TargetPixelFileValidator(self.logger)
-        filenames = glob.glob(os.path.join(path, '*-targ.fits')) + glob.glob(os.path.join(path, '*-targ.fits.gz'))
+        filenames = (glob.glob(os.path.join(path, '*-targ.fits'))
+                     + glob.glob(os.path.join(path, '*-targ.fits.gz')))
         for filename in tqdm(filenames, desc='Checking Target Pixel Files'):
             validator.validate(filename)
         self.logger.print_summary()
 
+        if record_issues:
+            self.logger.record_issues()
 
-def k2qc_check_path(path):
-    police = KeplerQualityPolice()
-    police.check_path(path)
 
 
 @click.command()
@@ -174,7 +186,7 @@ def k2qc_main(path):
 
     PATH must be the location of a Kepler/K2 Target Pixel File,
     or a directory containing such Target Pixel Files."""
-    k2qc_check_path(path)
+    KeplerQualityPolice().check_path(path)
 
 
 if __name__ == '__main__':
