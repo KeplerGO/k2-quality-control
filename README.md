@@ -6,7 +6,7 @@ This tool allows the [Guest Observer Office of NASA's Kepler/K2 Missions](https:
 to perform a quick sanity check of its public data sets.
 
 In particular, this tool verifies that Target Pixel Files
-are wel-formatted and contain sensible data.
+are well-formatted and contain sensible data.
 It does not replace the pipeline's existing suite of unit tests,
 it merely provides an independent sanity check on the final data products
 that the pipeline creates.
