@@ -45,6 +45,7 @@ class TargetPixelFileValidator(object):
                 getattr(self, verification)()
             except AssertionError:
                 self.log.report_issue(self.tpf_filename, verification)
+        self.tpf.close()
         self.log.tpf_files_checked += 1
 
     def verify_fits_standard(self):
