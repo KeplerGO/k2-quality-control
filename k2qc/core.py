@@ -126,12 +126,13 @@ class TargetPixelFileValidator(object):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")  # ignore NaN comparison warnings
             mask = self.tpf[1].data['QUALITY'] == 0
-            flux_plus_bkg = self.tpf[1].data['FLUX'][mask] + self.tpf[1].data['FLUX_BKG'][mask]
-            if (flux_plus_bkg < 0).sum() > 0:
+            flux_plus_bkg = (self.tpf[1].data['FLUX'] + self.tpf[1].data['FLUX_BKG'])
+            if ((flux_plus_bkg < 0).sum(axis=(1, 2))[mask]).sum() > 0:
                 badpixels = np.argwhere(flux_plus_bkg < 0)
                 for pix in badpixels:
-                    print("Negative flux values found at frame {},"
-                          " pixel coordinates ({}, {})".format(pix[0], pix[1], pix[2]))
+                    if mask[pix[0]]:
+                        print("FLUX + FLUX_BKG < 0 found at frame {}, pixel "
+                              "coordinates ({},{})".format(pix[0], pix[1], pix[2]))
                 assert False
 
     def verify_cdpp(self):
